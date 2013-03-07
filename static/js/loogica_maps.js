@@ -16,6 +16,13 @@
 
             this.model.gmaps_polygons = [];
 
+            // If polygons is null we must create an dummy
+            // polygon object with the coordinates in this
+            // object root
+            if (polygons == null) {
+                polygons = [{coordinates: this.model.get('coordinates')}];
+            }
+
             var self = this;
             _.each(polygons, function(polygon) {
                 var gmap_polygon = self.render_polygon(polygon, bounds);
@@ -41,6 +48,11 @@
         fill_region: function(color) {
             _.each(this.model.gmaps_polygons, function(polygon) {
                 polygon.setOptions({ fillColor: color });
+            });
+        },
+        toggle: function(color, visible) {
+            _.each(this.model.gmaps_polygons, function(polygon) {
+                polygon.setVisible(visible);
             });
         },
         render_polygon: function(polygon, bounds) {
@@ -153,6 +165,12 @@
             var jaca_map_polygons = [];
             var guanabara_map_polygons = [];
 
+            if (this.neighborhoods) {
+                _.each(this.neighborhoods, function(element) {
+                    element.toggle(false);
+                });
+            }
+
             _.each(zona_sul, function(element) {
                 zs_map_polygons.push(element);
             });
@@ -215,10 +233,17 @@
 
         },
         bairros: function() {
+            _.each(this.regions, function(element) {
+                element.toggle(false);
+            });
+            this.neighborhoods = [];
+            var self = this;
+
             _.each(neighborhood, function(element) {
                 var region = new Region(element);
                 var regionView = new RegioView({model:region});
                 regionView.render();
+                self.neighborhoods.push(regionView);
             });
 
             var _project = {
