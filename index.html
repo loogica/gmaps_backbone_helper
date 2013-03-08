@@ -37,39 +37,7 @@
         white-space: nowrap;
       }
     </style>
-
-    <script src="/static/js/jquery.js" ></script>
-    <script src="/static/js/underscore-min.js" ></script>
-    <script src="/static/js/backbone-min.js" ></script>
-    <script src="/static/js/loogica_maps.js" ></script>
-    <script src="/static/js/neighborhood.js"></script>
-    <script>
-      function initialize() {
-        loadScript(null, '/static/js/markerwithlabel_packed.js');
-        loadScript(null, '/static/js/infobox_packed.js');
-
-        window.map_router = new MapRouter();
-        Backbone.history.start({pushState: false});
-        window.map_router.navigate('regioes', {trigger: true});
-      }
-
-      function loadScript(event, script_name) {
-        if (script_name) {
-          _loadScript(script_name);
-        } else {
-          _loadScript("http://maps.googleapis.com/maps/api/js?key=AIzaSyBnFMm_tadKGcXD4tP93hKTI73HM2zsqFY&sensor=false&callback=initialize");
-        }
-      }
-
-      function _loadScript(script_name) {
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = script_name;
-        document.body.appendChild(script);
-      }
-
-      window.onload = loadScript;
-    </script>
+    <script data-main="/static/js/app.js" src="/static/js/require.js"></script>
   </head>
   <body>
     <div id="map_canvas"></div>

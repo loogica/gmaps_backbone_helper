@@ -1,7 +1,11 @@
-(function($) {
-    window.Region = Backbone.Model.extend({});
+define('loogica', ["domReady!", "jquery", "underscore",
+         "backbone", "gmaps", "marker",
+         "infobox"], function(doc, $, _, Backbone, google,
+                              marker, infobox) {
 
-    window.RegioView = Backbone.View.extend({
+    Region = Backbone.Model.extend({});
+
+    RegioView = Backbone.View.extend({
         initialize: function() {
             _.bindAll(this, 'render');
             _.bindAll(this, 'render_polygon');
@@ -95,8 +99,8 @@
         }
     });
 
-    window.Place = Backbone.Model.extend({});
-    window.PlaceView = Backbone.View.extend({
+    Place = Backbone.Model.extend({});
+    PlaceView = Backbone.View.extend({
         initialize: function() {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
@@ -117,8 +121,8 @@
         }
     });
 
-    window.Map = Backbone.Model.extend({});
-    window.MapView = Backbone.View.extend({
+    Map = Backbone.Model.extend({});
+    MapView = Backbone.View.extend({
         initialize: function() {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
@@ -130,7 +134,7 @@
         }
     });
 
-    window.MapRouter = Backbone.Router.extend({
+    MapRouter = Backbone.Router.extend({
         routes: {
             'regioes' : 'regioes',
             'bairros' : 'bairros'
@@ -233,12 +237,13 @@
 
         },
         bairros: function() {
+            this.neighborhoods = [];
+
             _.each(this.regions, function(element) {
                 element.toggle(false);
             });
-            this.neighborhoods = [];
-            var self = this;
 
+            var self = this;
             _.each(neighborhood, function(element) {
                 var region = new Region(element);
                 var regionView = new RegioView({model:region});
@@ -257,4 +262,14 @@
             });
         }
     });
-})(jQuery);
+
+    return {
+        Region: Region,
+        RegioView: RegioView,
+        Place: Place,
+        PlaceView: PlaceView,
+        Map: Map,
+        MapView: MapView,
+        MapRouter: MapRouter
+    };
+});
