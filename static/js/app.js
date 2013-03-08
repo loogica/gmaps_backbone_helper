@@ -42,6 +42,13 @@ requirejs.config({
 });
 
 require(["domReady!", "backbone", "loogica"], function(doc, Backbone, loogica) {
+
+    $(window).resize(function () {
+        var h = $(window).height(),
+            offsetTop = 40; // Calculate the top offset
+        $('#map_canvas').css('height', (h - offsetTop));
+    }).resize();
+
     require(["marker", "rio_data"], function () {
         window.map_router = new loogica.MapRouter();
         Backbone.history.start({pushState: false});

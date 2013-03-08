@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Loogica - Maps Helper</title>
-    <style type="text/css">
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
+
+    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
+    </style>
+    <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <style type="text/css">
+
 
       #map_canvas {
         height: 100%;
@@ -36,10 +40,36 @@
         border: 2px solid black;
         white-space: nowrap;
       }
+      #mapCanvas img {
+  max-width: none;
+  width: auto; display:inline;
+}
     </style>
     <script data-main="/static/js/app.js" src="/static/js/require.js"></script>
   </head>
   <body>
-    <div id="map_canvas"></div>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">Loogica Maps Helper</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="#regioes">Regiões</a></li>
+              <li><a href="#bairros">Bairros</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div id="map_canvas"></div>
+      </div>
+    </div> <!-- /container -->
   </body>
 </html>
