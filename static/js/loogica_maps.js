@@ -34,20 +34,26 @@ define('loogica', ["domReady!", "jquery", "underscore",
             });
 
             this.model.bounds = bounds;
+            this.model.set({'marker': null}, {silent: true});
         },
-        show_name: function() {
-            var point_fix = this.model.get('name').length * 3;
-            var marker = new MarkerWithLabel({
-                map: window.map_router.map,
-                raiseOnDrag: false,
-                draggable: false,
-                position: this.model.bounds.getCenter(),
-                labelContent: this.model.get('name'),
-                labelAnchor: new google.maps.Point(point_fix, 0),
-                labelClass: "labels",
-                labelStyle: {opacity: 0.75},
-                icon: 'images.png'
-            });
+        show_name: function(show) {
+            if (this.model.get('marker') === null) {
+                var point_fix = this.model.get('name').length * 3;
+                var marker = new MarkerWithLabel({
+                    map: window.map_router.map,
+                    raiseOnDrag: false,
+                    draggable: false,
+                    position: this.model.bounds.getCenter(),
+                    labelContent: this.model.get('name'),
+                    labelAnchor: new google.maps.Point(point_fix, 0),
+                    labelClass: "labels",
+                    labelStyle: {opacity: 0.75},
+                    icon: 'images.png'
+                });
+                this.model.set({'marker': marker}, {silent: true});
+            }
+
+            this.model.get('marker').setVisible(show);
         },
         fill_region: function(color) {
             _.each(this.model.gmaps_polygons, function(polygon) {
@@ -136,8 +142,10 @@ define('loogica', ["domReady!", "jquery", "underscore",
 
     MapRouter = Backbone.Router.extend({
         routes: {
-            'regioes' : 'regioes',
-            'bairros' : 'bairros'
+            'regioes' : 'regions',
+            'bairros' : 'neighborhoods',
+            'nomes': 'names',
+            'sem_nomes': 'no_names'
         },
         initialize: function() {
             var _map = {
@@ -161,8 +169,12 @@ define('loogica', ["domReady!", "jquery", "underscore",
             var map = new Map(_map);
             map_view = new MapView({model:map});
             this.map = map_view.render();
+
+            this.names_el = $('a[href="#nomes"]');
+            this.regions_el = $('a[href="#regioes"]');
+            this.neighborhoods_el = $('a[href="#bairros"]');
         },
-        regioes: function() {
+        regions: function() {
             this.regions = [];
             var zs_map_polygons = [];
             var sepe_map_polygons = [];
@@ -234,9 +246,12 @@ define('loogica', ["domReady!", "jquery", "underscore",
             guanabara_regionView.render();
 
             this.regions.push(guanabara_regionView);
+            this.current = "regions";
 
+            this.neighborhoods_el.parent().removeClass('active');
+            this.regions_el.parent().addClass('active');
         },
-        bairros: function() {
+        neighborhoods: function() {
             this.neighborhoods = [];
 
             _.each(this.regions, function(element) {
@@ -255,11 +270,45 @@ define('loogica', ["domReady!", "jquery", "underscore",
                 lat: -22.9488441857552033,
                 lng: -43.358066177368164
             };
+
+            this.current = "neighborhoods";
+            this.neighborhoods_el.parent().addClass('active');
+            this.regions_el.parent().removeClass('active');
         },
-        name: function () {
-            _.each(this.regions, function(element) {
-                element.show_name();
+        names: function () {
+            this.names_active = true;
+            this.names_el.parent().addClass('active');
+
+            var collection = [];
+
+            if (this.current == "neighborhoods") {
+                collection = this.neighborhoods;
+            } else{
+                collection = this.regions;
+            }
+
+            _.each(collection, function(element) {
+                element.show_name(true);
             });
+
+            this.names_el.attr('href', '#sem_nomes');
+        },
+        no_names: function() {
+            this.names_active = false;
+            this.names_el.parent().removeClass('active');
+            this.names_el.attr('href', '#nomes');
+
+            var collection = [];
+
+            if (this.current == "neighborhoods") {
+                collection = this.neighborhoods;
+            } else{
+                collection = this.regions;
+            }
+
+            for (var i = 0; i < collection.length; i++) {
+                collection[i].show_name(false);
+            }
         }
     });
 
