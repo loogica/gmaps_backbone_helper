@@ -6,7 +6,19 @@ define('loogica', ["domReady!", "jquery", "underscore",
     Region = Backbone.Model.extend({
         defaults: {
             name: "Region Name",
-            polygons: []
+            polygons: [],
+            is_visible: true
+        },
+        initialize: function() {
+            _.bindAll(this, 'visible');
+        },
+        visible: function(mode) {
+            if (mode == undefined) {
+                return this.get('is_visible');
+            }
+
+            this.set('is_visible', mode);
+            return mode;
         }
     });
 

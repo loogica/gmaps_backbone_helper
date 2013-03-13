@@ -1,7 +1,18 @@
 describe('Region Spec', function() {
-    it('Model must have default configs', function() {
-        var region = new Region();
+    beforeEach(function() {
+        this.region = new Region();
+    });
 
-        expect(region.get('name')).toBe("Region Name");
+    it('Model must have default configs', function() {
+        expect(this.region.get('name')).toEqual("Region Name");
+        expect(this.region.get('polygons')).toEqual([]);
+    });
+
+    it('Must have a visible function', function() {
+        expect(this.region.visible()).toBe(true);
+
+        this.region.visible(false);
+
+        expect(this.region.visible()).toBe(false);
     });
 });
