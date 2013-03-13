@@ -3,7 +3,12 @@ define('loogica', ["domReady!", "jquery", "underscore",
          "infobox"], function(doc, $, _, Backbone, google,
                               marker, infobox) {
 
-    Region = Backbone.Model.extend({});
+    Region = Backbone.Model.extend({
+        defaults: {
+            name: "Region Name",
+            polygons: []
+        }
+    });
 
     RegioView = Backbone.View.extend({
         initialize: function() {
