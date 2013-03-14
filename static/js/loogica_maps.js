@@ -7,17 +7,26 @@ define('loogica', ["domReady!", "jquery", "underscore",
         defaults: {
             name: "Region Name",
             polygons: [],
-            is_visible: true
+            region_visible: true,
+            marker_visible: false
         },
         initialize: function() {
-            _.bindAll(this, 'visible');
+            _.bindAll(this, 'visible', 'marker_visible');
         },
         visible: function(mode) {
             if (mode == undefined) {
-                return this.get('is_visible');
+                return this.get('region_visible');
             }
 
-            this.set('is_visible', mode);
+            this.set('region_visible', mode);
+            return mode;
+        },
+        marker_visible: function(mode) {
+            if (mode == undefined) {
+                return this.get('marker_visible');
+            }
+
+            this.set('marker_visible', mode);
             return mode;
         }
     });
@@ -28,7 +37,8 @@ define('loogica', ["domReady!", "jquery", "underscore",
             _.bindAll(this, 'render_polygon');
             _.bindAll(this, 'fill_region');
             _.bindAll(this, 'show_name');
-            this.model.bind('change', this.render);
+            this.model.bind('change:region_visible', this.toggle);
+            this.model.bind('change:marker_visible', this.show_name);
             this.model.bind('fill_region', this.fill_region);
         },
         render: function() {
@@ -53,34 +63,38 @@ define('loogica', ["domReady!", "jquery", "underscore",
             this.model.bounds = bounds;
             this.model.set({'marker': null}, {silent: true});
         },
-        show_name: function(show) {
-            if (this.model.get('marker') === null) {
+        show_name: function(model, show) {
+            if (model.get('marker') === null) {
                 var point_fix = this.model.get('name').length * 3;
                 var marker = new MarkerWithLabel({
                     map: window.map_router.map,
                     raiseOnDrag: false,
                     draggable: false,
                     position: this.model.bounds.getCenter(),
-                    labelContent: this.model.get('name'),
+                    labelContent: model.get('name'),
                     labelAnchor: new google.maps.Point(point_fix, 0),
                     labelClass: "labels",
                     labelStyle: {opacity: 0.75},
                     icon: 'images.png'
                 });
-                this.model.set({'marker': marker}, {silent: true});
+                model.set({'marker': marker}, {silent: true});
             }
-
-            this.model.get('marker').setVisible(show);
+            model.get('marker').setVisible(show);
         },
         fill_region: function(color) {
             _.each(this.model.gmaps_polygons, function(polygon) {
                 polygon.setOptions({ fillColor: color });
             });
         },
-        toggle: function(color, visible) {
-            _.each(this.model.gmaps_polygons, function(polygon) {
+        toggle: function(model, visible) {
+            _.each(model.gmaps_polygons, function(polygon) {
                 polygon.setVisible(visible);
             });
+
+            var marker = model.get('marker');
+            if (marker) {
+                model.get('marker').setVisible(visible);
+            }
         },
         render_polygon: function(polygon, bounds) {
             var coordinates = [];
@@ -200,7 +214,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
 
             if (this.neighborhoods) {
                 _.each(this.neighborhoods, function(element) {
-                    element.toggle(false);
+                    element.visible(false);
                 });
             }
 
@@ -215,7 +229,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             var zs_regionView = new RegioView({model: zs_region});
             zs_regionView.render();
 
-            this.regions.push(zs_regionView);
+            this.regions.push(zs_region);
 
             var zo = _.union(sepetiba, jaca);
             var zo_polygons = [];
@@ -229,7 +243,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             var zo_regionView = new RegioView({model: zo_region});
             zo_regionView.render();
 
-            this.regions.push(zo_regionView);
+            this.regions.push(zo_region);
 
            // _.each(sepetiba, function(element) {
            //     sepe_map_polygons.push(element);
@@ -262,7 +276,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             var guanabara_regionView = new RegioView({model: guanabara_region});
             guanabara_regionView.render();
 
-            this.regions.push(guanabara_regionView);
+            this.regions.push(guanabara_region);
             this.current = "regions";
 
             this.neighborhoods_el.parent().removeClass('active');
@@ -272,15 +286,16 @@ define('loogica', ["domReady!", "jquery", "underscore",
             this.neighborhoods = [];
 
             _.each(this.regions, function(element) {
-                element.toggle(false);
+                element.visible(false);
             });
 
             var self = this;
             _.each(neighborhood, function(element) {
+                element['polygons'] = [{coordinates: element.coordinates}];
                 var region = new Region(element);
                 var regionView = new RegioView({model:region});
                 regionView.render();
-                self.neighborhoods.push(regionView);
+                self.neighborhoods.push(region);
             });
 
             var _project = {
@@ -305,7 +320,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             }
 
             _.each(collection, function(element) {
-                element.show_name(true);
+                element.marker_visible(true);
             });
 
             this.names_el.attr('href', '#sem_nomes');
@@ -324,7 +339,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             }
 
             for (var i = 0; i < collection.length; i++) {
-                collection[i].show_name(false);
+                collection[i].marker_visible(false);
             }
         }
     });
