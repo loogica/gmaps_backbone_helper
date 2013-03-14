@@ -8,12 +8,14 @@ define('loogica', ["domReady!", "jquery", "underscore",
             name: "Region Name",
             polygons: [],
             region_visible: true,
-            marker_visible: false
+            marker_visible: false,
+            marker: null
         },
         initialize: function() {
-            _.bindAll(this, 'visible', 'marker_visible');
+            _.bindAll(this, 'area_visible');
+            _.bindAll(this, 'marker_visible');
         },
-        visible: function(mode) {
+        area_visible: function(mode) {
             if (mode == undefined) {
                 return this.get('region_visible');
             }
@@ -37,6 +39,7 @@ define('loogica', ["domReady!", "jquery", "underscore",
             _.bindAll(this, 'render_polygon');
             _.bindAll(this, 'fill_region');
             _.bindAll(this, 'show_name');
+            _.bindAll(this, 'toggle');
             this.model.bind('change:region_visible', this.toggle);
             this.model.bind('change:marker_visible', this.show_name);
             this.model.bind('fill_region', this.fill_region);
@@ -54,25 +57,27 @@ define('loogica', ["domReady!", "jquery", "underscore",
             });
 
             this.model.bounds = bounds;
-            this.model.set({'marker': null}, {silent: true});
+            if (this.model.get('marker_visible')) {
+                this.show_name(this.model, true);
+            }
         },
         show_name: function(model, show) {
-            if (model.get('marker') === null) {
+            if (this.model.get('marker') == null) {
                 var point_fix = this.model.get('name').length * 3;
                 var marker = new MarkerWithLabel({
                     map: window.map_router.map,
                     raiseOnDrag: false,
                     draggable: false,
                     position: this.model.bounds.getCenter(),
-                    labelContent: model.get('name'),
+                    labelContent: this.model.get('name'),
                     labelAnchor: new google.maps.Point(point_fix, 0),
                     labelClass: "labels",
                     labelStyle: {opacity: 0.75},
                     icon: 'images.png'
                 });
-                model.set({'marker': marker}, {silent: true});
+                this.model.set({'marker': marker}, {silent: true});
             }
-            model.get('marker').setVisible(show);
+            this.model.get('marker').setVisible(show);
         },
         fill_region: function(color) {
             _.each(this.model.gmaps_polygons, function(polygon) {
@@ -80,13 +85,13 @@ define('loogica', ["domReady!", "jquery", "underscore",
             });
         },
         toggle: function(model, visible) {
-            _.each(model.gmaps_polygons, function(polygon) {
+            _.each(this.model.gmaps_polygons, function(polygon) {
                 polygon.setVisible(visible);
             });
 
-            var marker = model.get('marker');
-            if (marker) {
-                model.get('marker').setVisible(visible);
+            var marker = this.model.get('marker');
+            if (marker && this.model.get('marker_visible')) {
+                this.model.get('marker').setVisible(visible);
             }
         },
         render_polygon: function(polygon, bounds) {
@@ -166,8 +171,8 @@ define('loogica', ["domReady!", "jquery", "underscore",
 
     MapRouter = Backbone.Router.extend({
         routes: {
-            'regioes' : 'regions',
-            'bairros' : 'neighborhoods',
+            'regioes' : 'show_regions',
+            'bairros' : 'show_neighborhoods',
             'nomes': 'names',
             'sem_nomes': 'no_names'
         },
@@ -197,18 +202,31 @@ define('loogica', ["domReady!", "jquery", "underscore",
             this.names_el = $('a[href="#nomes"]');
             this.regions_el = $('a[href="#regioes"]');
             this.neighborhoods_el = $('a[href="#bairros"]');
-        },
-        regions: function() {
             this.regions = [];
+            this.neighborhoods = [];
+        },
+        show_regions: function() {
+            var self = this;
             var zs_map_polygons = [];
             var sepe_map_polygons = [];
             var jaca_map_polygons = [];
             var guanabara_map_polygons = [];
 
+            this.current = "regions";
+            this.neighborhoods_el.parent().removeClass('active');
+            this.regions_el.parent().addClass('active');
+
             if (this.neighborhoods) {
                 _.each(this.neighborhoods, function(element) {
-                    element.visible(false);
+                    element.area_visible(false);
                 });
+            }
+
+            if (this.regions.length > 0) {
+                _.each(this.regions, function(element) {
+                    element.area_visible(true);
+                });
+                return;
             }
 
             _.each(zona_sul, function(element) {
@@ -270,21 +288,30 @@ define('loogica', ["domReady!", "jquery", "underscore",
             guanabara_regionView.render();
 
             this.regions.push(guanabara_region);
-            this.current = "regions";
-
-            this.neighborhoods_el.parent().removeClass('active');
-            this.regions_el.parent().addClass('active');
         },
-        neighborhoods: function() {
-            this.neighborhoods = [];
+        show_neighborhoods: function() {
+            var self = this;
+
+            this.current = "neighborhoods";
+            this.neighborhoods_el.parent().addClass('active');
+            this.regions_el.parent().removeClass('active');
 
             _.each(this.regions, function(element) {
-                element.visible(false);
+                element.area_visible(false);
             });
 
-            var self = this;
+            if (this.neighborhoods.length > 0) {
+                _.each(this.neighborhoods, function(element) {
+                    element.area_visible(true);
+                });
+                return;
+            }
+
             _.each(neighborhood, function(element) {
                 element['polygons'] = [{coordinates: element.coordinates}];
+                if (self.names_active) {
+                    element['marker_visible'] = true;
+                }
                 var region = new Region(element);
                 var regionView = new RegioView({model:region});
                 regionView.render();
@@ -296,42 +323,42 @@ define('loogica', ["domReady!", "jquery", "underscore",
                 lng: -43.358066177368164
             };
 
-            this.current = "neighborhoods";
-            this.neighborhoods_el.parent().addClass('active');
-            this.regions_el.parent().removeClass('active');
         },
         names: function () {
             this.names_active = true;
             this.names_el.parent().addClass('active');
+            this.names_el.attr('href', '#sem_nomes');
 
             var collection = [];
-
+            var hidden_collection = [];
+            
             if (this.current == "neighborhoods") {
                 collection = this.neighborhoods;
-            } else{
+                hidden_collection = this.regions;
+            } else {
                 collection = this.regions;
+                hidden_collection = this.neighborhoods;
             }
 
-            _.each(collection, function(element) {
+            for (var i = 0; i < collection.length; i++) {
+                var element = collection[i];
                 element.marker_visible(true);
-            });
+            }
 
-            this.names_el.attr('href', '#sem_nomes');
+            for (i = 0; i < hidden_collection.length; i++) {
+                var helement = hidden_collection[i];
+                helement.set({marker_visible: true}, {silent: true});
+            }
         },
         no_names: function() {
             this.names_active = false;
             this.names_el.parent().removeClass('active');
             this.names_el.attr('href', '#nomes');
 
-            var collection = [];
-
-            if (this.current == "neighborhoods") {
-                collection = this.neighborhoods;
-            } else{
-                collection = this.regions;
-            }
+            var collection = _.union(this.regions, this.neighborhoods);
 
             for (var i = 0; i < collection.length; i++) {
+                var element = collection[i];
                 collection[i].marker_visible(false);
             }
         }
