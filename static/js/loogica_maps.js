@@ -47,13 +47,6 @@ define('loogica', ["domReady!", "jquery", "underscore",
 
             this.model.gmaps_polygons = [];
 
-            // If polygons is null we must create an dummy
-            // polygon object with the coordinates in this
-            // object root
-            if (polygons == null) {
-                polygons = [{coordinates: this.model.get('coordinates')}];
-            }
-
             var self = this;
             _.each(polygons, function(polygon) {
                 var gmap_polygon = self.render_polygon(polygon, bounds);
