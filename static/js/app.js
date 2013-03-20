@@ -50,6 +50,7 @@ require(["domReady!", "backbone", "loogica"], function(doc, Backbone, loogica) {
     }).resize();
 
     require(["marker", "rio_data"], function () {
+        $("#loader").hide();
         window.map_router = new loogica.MapRouter();
         Backbone.history.start({pushState: false});
         window.map_router.navigate('regioes', {trigger: true});
