@@ -5,6 +5,7 @@ define('gmaps', ['async!http://maps.googleapis.com/maps/api/js?key=AIzaSyBnFMm_t
 
 requirejs.config({
     baseUrl: '/static/js',
+    waitSeconds: 300,
     paths: {
         jquery: 'jquery',
         backbone : 'backbone-min',
